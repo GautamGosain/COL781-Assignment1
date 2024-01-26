@@ -6,6 +6,13 @@
 namespace COL781 {
 	namespace Software {
 
+		/* SDL parameters */
+
+		SDL_Window* window = NULL;
+		SDL_Surface *windowSurface = NULL;
+		bool quit = false;
+		SDL_Surface* framebuffer = NULL;
+
 		// Forward declarations
 
 		template <> float Attribs::get(int index) const;
@@ -130,6 +137,143 @@ namespace COL781 {
 				delete it->second;
 			}
 			values[name] = (void*)(new T(value));
+		}
+
+		// start code
+
+		bool Rasterizer::initialize(const std::string &title, int width, int height, int spp){
+			bool success = true;
+			if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
+				printf("SDL could not initialize! SDL_Error: %s", SDL_GetError());
+				success = false;
+			} else {
+				window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN);
+				if (window == NULL) {
+					printf("Window could not be created! SDL_Error: %s", SDL_GetError());
+					success = false;
+				} else {
+					windowSurface = SDL_GetWindowSurface(window);
+					framebuffer = SDL_CreateRGBSurface(0, width, height, 32, 0, 0, 0, 0);
+				}
+			}
+			return success;
+		}
+
+		ShaderProgram Rasterizer::createShaderProgram(const VertexShader &vs, const FragmentShader &fs){
+			ShaderProgram program;
+			program.fs = fs;
+			program.vs = vs;
+			return program;
+		}
+
+		// incomplete
+		Object Rasterizer::createObject(){
+			Object object;
+			
+			return object;
+		}
+
+		void setAttribs(Object &object, int attribIndex, int n, int d, const float* data) {
+			const float* ptr = data;
+
+    		for (int j = 0; j < n; ++j) {
+        		Object::Buffer attrValues;
+        		for (int i = 0; i < d && ptr != nullptr; ++i) {
+            		attrValues.emplace_back(*ptr);
+            		++ptr;
+        		}
+        		object.attributeValues.emplace_back(std::move(attrValues));
+    		}
+
+    		object.attributeDims.push_back(n); // assuming vertex is send first, then colour is send
+		}
+
+		template <> void Rasterizer::setVertexAttribs(Object &object, int attribIndex, int n, const float* data) {
+			setAttribs(object, attribIndex, n, 1, data);
+		}
+
+		template <> void Rasterizer::setVertexAttribs(Object &object, int attribIndex, int n, const glm::vec2* data) {
+			setAttribs(object, attribIndex, n, 2, (float*)data);
+		}
+
+		template <> void Rasterizer::setVertexAttribs(Object &object, int attribIndex, int n, const glm::vec3* data) {
+			setAttribs(object, attribIndex, n, 3, (float*)data);
+		}
+
+		template <> void Rasterizer::setVertexAttribs(Object &object, int attribIndex, int n, const glm::vec4* data) {
+			setAttribs(object, attribIndex, n, 4, (float*)data);
+		}
+
+		void Rasterizer::setTriangleIndices(Object &object, int n, glm::ivec3* indices) {
+			std::copy(indices, indices + n, std::back_inserter(object.indices));
+		}
+		
+		// incomplete
+		bool Rasterizer::shouldQuit(){
+			return quit;
+		}
+
+		void Rasterizer::clear(glm::vec4 color) {
+			Uint32 *pixels = (Uint32*)framebuffer->pixels;
+            SDL_PixelFormat *format = framebuffer->format;
+			int width = framebuffer->w;
+			int height = framebuffer->h;
+			for(int i = 0; i < width; i++){
+				for(int j = 0; j < height; j++){
+					Uint32 defColor = SDL_MapRGBA(format,color[0]*255, color[1]*255, color[2]*255, color[3]*255);
+					pixels[i + width*j] = defColor;
+				}
+			}
+			SDL_BlitScaled(framebuffer, NULL, windowSurface, NULL);
+            SDL_UpdateWindowSurface(window);
+		}
+
+		void Rasterizer::useShaderProgram(const ShaderProgram &program) {
+			
+		}
+
+		template <> void Rasterizer::setUniform(ShaderProgram &program, const std::string &name, float value) {
+			
+		}
+		
+		template <> void Rasterizer::setUniform(ShaderProgram &program, const std::string &name, int value) {
+			
+		}
+
+		template <> void Rasterizer::setUniform(ShaderProgram &program, const std::string &name, glm::vec2 value) {
+			
+		}
+		
+		template <> void Rasterizer::setUniform(ShaderProgram &program, const std::string &name, glm::vec3 value) {
+			
+		}
+		
+		template <> void Rasterizer::setUniform(ShaderProgram &program, const std::string &name, glm::vec4 value) {
+			
+		}
+
+		template <> void Rasterizer::setUniform(ShaderProgram &program, const std::string &name, glm::mat2 value) {
+			
+		}
+
+		template <> void Rasterizer::setUniform(ShaderProgram &program, const std::string &name, glm::mat3 value) {
+			
+		}
+
+		template <> void Rasterizer::setUniform(ShaderProgram &program, const std::string &name, glm::mat4 value) {
+			
+		}
+
+		void Rasterizer::drawObject(const Object &object){
+
+		}
+
+		void Rasterizer::show(){
+
+		}
+
+		void Rasterizer::deleteShaderProgram(ShaderProgram &program){
+
 		}
 
 	}
